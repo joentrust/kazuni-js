@@ -3,9 +3,11 @@ import {
   DEFAULT_MAX_RETRIES,
   DEFAULT_TIMEOUT_MS,
   type RequestConfig,
+  request,
 } from "./request";
+import { Messages } from "./resources/messages";
 import { Send } from "./resources/send";
-import type { KazuniConstructorArg } from "./types";
+import type { KazuniConstructorArg, MeResponse } from "./types";
 
 /**
  * The Kazuni API client. Construct one instance per API key and reuse it across requests.
@@ -29,6 +31,9 @@ import type { KazuniConstructorArg } from "./types";
 export class Kazuni {
   /** Email-sending methods. See {@link Send.email}. */
   readonly send: Send;
+
+  /** Message status lookups. See {@link Messages.get}. */
+  readonly messages: Messages;
 
   #config: RequestConfig;
 
@@ -70,5 +75,32 @@ export class Kazuni {
     };
 
     this.send = new Send(this.#config);
+    this.messages = new Messages(this.#config);
+  }
+
+  /**
+   * Retrieves the organization and permissions attached to the API key in use.
+   *
+   * This makes a `GET /v1/me` request. Useful for confirming which organization and mode
+   * (`live`/`test`) a key belongs to, and which permissions it carries, without hardcoding that
+   * knowledge alongside the key itself.
+   *
+   * This is a `GET` request, so it is retry-eligible by default - no `idempotencyKey` is needed
+   * or accepted, unlike {@link Send.email}. Reading key metadata has no side effects, so
+   * retrying it on a transient failure is always safe.
+   *
+   * @returns The organization id, mode, and permissions for the API key in use. See
+   *   {@link MeResponse}.
+   * @throws {KazuniError} On any non-2xx response (invalid API key, rate limiting, server error)
+   *   or on a network failure/timeout.
+   *
+   * @example
+   * ```ts
+   * const me = await kazuni.me();
+   * console.log(me.organizationId, me.mode, me.permissions.send);
+   * ```
+   */
+  me(): Promise<MeResponse> {
+    return request<MeResponse>(this.#config, "GET", "/v1/me");
   }
 }
