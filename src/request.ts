@@ -69,9 +69,14 @@ async function parseResponse<T>(response: Response): Promise<T> {
 
   if (!response.ok) {
     const errorPayload = payload as { error?: string; code?: string } | undefined;
+    // The API does not send a dedicated `code` field yet. For 409 responses it currently
+    // reuses `error` to carry a machine-readable conflict code (e.g. "contact_conflict")
+    // rather than a human-readable message, so fall back to that until a real `code` field
+    // ships.
+    const code = errorPayload?.code ?? (response.status === 409 ? errorPayload?.error : undefined);
     throw new KazuniError(errorPayload?.error ?? `Request failed with status ${response.status}`, {
       status: response.status,
-      code: errorPayload?.code,
+      code,
       requestId,
     });
   }
@@ -86,7 +91,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
  */
 export async function request<T>(
   config: RequestConfig,
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE",
   path: string,
   body?: unknown,
   options?: RequestOptions,

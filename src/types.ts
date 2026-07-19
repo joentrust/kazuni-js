@@ -230,3 +230,211 @@ export interface MeResponse {
   /** The permissions granted to the API key in use. See {@link ApiKeyPermissions}. */
   permissions: ApiKeyPermissions;
 }
+
+/**
+ * The kind of value a contact identifier holds. See {@link IdentifierInput} and
+ * {@link ContactIdentifier}.
+ */
+export type IdentifierType = "email" | "phone";
+
+/**
+ * A delivery channel a contact can be subscribed to. Used with
+ * {@link Contacts.setSubscription} and in {@link ContactResponse.subscriptions}.
+ */
+export type Channel = "email" | "sms" | "whatsapp";
+
+/**
+ * A contact's subscription state for a given {@link Channel}.
+ */
+export type SubscriptionStatus = "subscribed" | "unsubscribed";
+
+/**
+ * An identifier attached to a contact, as returned by the API. See
+ * {@link ContactResponse.identifiers}.
+ */
+export interface ContactIdentifier {
+  /** The identifier's own id, distinct from the owning contact's id. Used by
+   * {@link Contacts.removeIdentifier}. */
+  id: string;
+
+  /** Whether this is an email address or a phone number. */
+  type: IdentifierType;
+
+  /**
+   * The identifier's normalized value - lowercased for email, E.164 for phone. This may differ
+   * from whatever raw string was originally submitted via {@link IdentifierInput.value}.
+   */
+  value: string;
+
+  /** Whether this identifier is the contact's primary one for its {@link type}. */
+  isPrimary: boolean;
+}
+
+/**
+ * An identifier to attach to a contact - passed via {@link CreateContactParams.identifiers},
+ * {@link UpsertContactParams.identifiers}, and {@link Contacts.addIdentifier}.
+ */
+export interface IdentifierInput {
+  /** Whether `value` is an email address or a phone number. */
+  type: IdentifierType;
+
+  /**
+   * The raw identifier value. Emails are normalized by lowercasing; phone numbers are parsed
+   * and normalized to E.164. A value that cannot be parsed as a valid identifier of `type`
+   * throws a {@link KazuniError} with `status: 422` - see the throwing methods for detail.
+   */
+  value: string;
+
+  /**
+   * Whether this identifier should be marked as the contact's primary one for its `type`.
+   * Defaults to `false` when omitted.
+   */
+  isPrimary?: boolean;
+}
+
+/**
+ * A contact, as returned by every {@link Contacts} method that reads or mutates one.
+ */
+export interface ContactResponse {
+  /** The contact's unique id. */
+  id: string;
+
+  /** The contact's first name, or `null` when not set. */
+  firstName: string | null;
+
+  /** The contact's last name, or `null` when not set. */
+  lastName: string | null;
+
+  /** Free-form string key/value metadata attached to the contact. */
+  metadata: Record<string, string>;
+
+  /** Every identifier (email and/or phone) currently attached to this contact. */
+  identifiers: ContactIdentifier[];
+
+  /**
+   * The contact's subscription status for each {@link Channel}. Always has an entry for every
+   * channel, even ones the contact has never been explicitly subscribed or unsubscribed on -
+   * unset channels default to `"subscribed"` for email and `"unsubscribed"` for sms/whatsapp.
+   */
+  subscriptions: Record<Channel, SubscriptionStatus>;
+
+  /** When the contact was created, as an ISO 8601 timestamp. */
+  createdAt: string;
+
+  /** When the contact was last updated, as an ISO 8601 timestamp. */
+  updatedAt: string;
+}
+
+/**
+ * Parameters for {@link Contacts.create} and {@link Contacts.upsert}.
+ */
+export interface CreateContactParams {
+  /**
+   * The identifiers to attach to the contact - at least one is required. For
+   * {@link Contacts.upsert}, every one of these is used to search for an existing match; see
+   * {@link Contacts.upsert} for what happens when they resolve to more than one contact.
+   */
+  identifiers: IdentifierInput[];
+
+  /** The contact's first name. */
+  firstName?: string;
+
+  /** The contact's last name. */
+  lastName?: string;
+
+  /** Free-form string key/value metadata to attach to the contact. Defaults to `{}`. */
+  metadata?: Record<string, string>;
+
+  /** A list id to add the contact to immediately after it's created or matched. */
+  listId?: string;
+}
+
+/**
+ * Parameters for {@link Contacts.upsert}. Identical in shape to {@link CreateContactParams} -
+ * kept as a distinct alias so the two methods' signatures can diverge later without a breaking
+ * change to either.
+ */
+export type UpsertContactParams = CreateContactParams;
+
+/**
+ * Parameters for {@link Contacts.update}. Every field is optional and independently settable -
+ * omitted fields are left unchanged, so passing `{ lastName: "Ochieng" }` updates only the last
+ * name.
+ */
+export interface UpdateContactParams {
+  /** The contact's new first name. */
+  firstName?: string;
+
+  /** The contact's new last name. */
+  lastName?: string;
+
+  /**
+   * Replacement metadata for the contact. This **replaces** the existing metadata object
+   * wholesale rather than merging into it - include any existing keys you want to keep.
+   */
+  metadata?: Record<string, string>;
+}
+
+/**
+ * Parameters for {@link Contacts.addIdentifier}. Identical in shape to {@link IdentifierInput}.
+ */
+export type AddIdentifierParams = IdentifierInput;
+
+/**
+ * The source to record for a subscription change, passed via
+ * {@link SetSubscriptionParams.source}.
+ */
+export type SubscriptionSource = "signup" | "import" | "unsubscribe_link" | "reply_stop" | "api";
+
+/**
+ * Parameters for {@link Contacts.setSubscription}.
+ */
+export interface SetSubscriptionParams {
+  /** The subscription status to set the contact to for the given channel. */
+  status: SubscriptionStatus;
+
+  /**
+   * Where this subscription change originated. Defaults to `"api"` when omitted, which is the
+   * right choice for most programmatic calls - use a more specific source (e.g.
+   * `"unsubscribe_link"`) only when this call is relaying an action that happened somewhere
+   * else.
+   */
+  source?: SubscriptionSource;
+}
+
+/**
+ * Query parameters for {@link Contacts.list}.
+ */
+export interface ListContactsParams {
+  /** The page number to fetch, starting at `1`. Defaults to `1` when omitted. */
+  page?: number;
+
+  /** How many contacts to return per page. Defaults to `50`, capped at `200`, when omitted. */
+  limit?: number;
+
+  /**
+   * A free-text search filtering contacts by first name, last name, or identifier value
+   * (email/phone), matched case-insensitively as a substring.
+   */
+  q?: string;
+
+  /** Restricts results to contacts that are members of this list id. */
+  listId?: string;
+}
+
+/**
+ * The response returned by {@link Contacts.list}: a page of contacts plus pagination metadata.
+ */
+export interface ListContactsResponse {
+  /** The contacts on this page, in most-recently-created-first order. */
+  data: ContactResponse[];
+
+  /** The total number of contacts matching the query, across all pages. */
+  total: number;
+
+  /** The page number this response corresponds to, echoing {@link ListContactsParams.page}. */
+  page: number;
+
+  /** The page size used for this response, echoing {@link ListContactsParams.limit}. */
+  limit: number;
+}

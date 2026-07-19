@@ -5,6 +5,7 @@ import {
   type RequestConfig,
   request,
 } from "./request";
+import { Contacts } from "./resources/contacts";
 import { Messages } from "./resources/messages";
 import { Send } from "./resources/send";
 import type { KazuniConstructorArg, MeResponse } from "./types";
@@ -34,6 +35,9 @@ export class Kazuni {
 
   /** Message status lookups. See {@link Messages.get}. */
   readonly messages: Messages;
+
+  /** Contact management - create, look up, update, and manage identifiers/subscriptions. See {@link Contacts}. */
+  readonly contacts: Contacts;
 
   #config: RequestConfig;
 
@@ -76,6 +80,7 @@ export class Kazuni {
 
     this.send = new Send(this.#config);
     this.messages = new Messages(this.#config);
+    this.contacts = new Contacts(this.#config);
   }
 
   /**
