@@ -1,6 +1,6 @@
 {
   "name": "kazuni",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Official JavaScript/TypeScript SDK for the Kazuni notifications API",
   "license": "MIT",
   "private": false,
