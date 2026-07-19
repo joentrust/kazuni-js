@@ -92,6 +92,16 @@ describe("kazuni.contacts", () => {
         status: 403,
       });
     });
+
+    it("maps a 409 conflict response to a KazuniError with code contact_conflict", async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ error: "contact_conflict" }, { status: 409 }));
+
+      await expect(
+        kazuni.contacts.create({
+          identifiers: [{ type: "email", value: "amara@example.com" }],
+        }),
+      ).rejects.toMatchObject({ name: "KazuniError", status: 409, code: "contact_conflict" });
+    });
   });
 
   describe("upsert", () => {
@@ -281,6 +291,16 @@ describe("kazuni.contacts", () => {
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(url).toBe(`${BASE_URL}/v1/contacts/${sampleContact.id}/identifiers/id-1`);
       expect(init.method).toBe("DELETE");
+    });
+
+    it("maps a 422 last-identifier response to a KazuniError", async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({ error: "Invalid email: amara@example.com" }, { status: 422 }),
+      );
+
+      await expect(
+        kazuni.contacts.removeIdentifier(sampleContact.id, "id-1"),
+      ).rejects.toMatchObject({ name: "KazuniError", status: 422 });
     });
   });
 

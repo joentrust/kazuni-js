@@ -79,10 +79,11 @@ export class Contacts {
    * Creates a new contact.
    *
    * This makes a `POST /v1/contacts` request. Requires the `contactsWrite` permission. Unlike
-   * {@link Contacts.upsert}, this always creates a new contact row - it does not check whether
-   * any of the supplied identifiers already belong to an existing contact, so prefer
-   * {@link Contacts.upsert} whenever a caller might submit the same contact more than once
-   * (e.g. syncing from an external system).
+   * {@link Contacts.upsert}, this never updates an existing contact - if any supplied identifier
+   * is already owned by another contact in your organization, the call throws rather than
+   * attaching it or silently creating a duplicate. Prefer {@link Contacts.upsert} whenever a
+   * caller might submit the same contact more than once (e.g. syncing from an external system)
+   * and you want that case to update in place instead of failing.
    *
    * @param params The contact to create - at least one identifier is required. See
    *   {@link CreateContactParams}.
@@ -91,6 +92,12 @@ export class Contacts {
    *   does and does not guarantee today. Without it, a failed create is never automatically
    *   retried, so it can never be silently created twice by the SDK.
    * @returns The newly created contact. See {@link ContactResponse}.
+   * @throws {KazuniError} With `status: 409` and `code: "contact_conflict"` if any supplied
+   *   identifier is already owned by an existing contact in your organization (uniqueness is
+   *   per-organization, so the same identifier value in a different organization is unaffected).
+   *   Resolve this deliberately - for example by calling {@link Contacts.upsert} instead, or by
+   *   looking up the existing contact via {@link Contacts.list} - rather than retrying the same
+   *   call.
    * @throws {KazuniError} With `status: 422` if an identifier's `value` cannot be parsed as a
    *   valid email or phone number for its `type` (e.g. an unparseable phone number). Also thrown
    *   on any other non-2xx response (invalid API key, missing permission, validation failure,
@@ -106,6 +113,20 @@ export class Contacts {
    * });
    *
    * console.log(contact.id, contact.subscriptions.email); // "...", "subscribed"
+   * ```
+   *
+   * @example Handling a duplicate identifier deliberately
+   * ```ts
+   * try {
+   *   await kazuni.contacts.create({
+   *     identifiers: [{ type: "email", value: "amara@example.com" }],
+   *   });
+   * } catch (error) {
+   *   if (error instanceof KazuniError && error.code === "contact_conflict") {
+   *     // amara@example.com already belongs to another contact - use upsert() instead, or look
+   *     // up the existing contact and decide how to proceed.
+   *   }
+   * }
    * ```
    */
   create(params: CreateContactParams, options?: RequestOptions): Promise<ContactResponse> {
@@ -324,10 +345,10 @@ export class Contacts {
    * `contactsWrite` permission. If `identifierId` doesn't correspond to an identifier currently
    * attached to this contact (already removed, belongs to a different contact, or never
    * existed), the call succeeds as a no-op and returns the contact unchanged - it does not
-   * throw. As of this API version, this also applies when removing a contact's only remaining
-   * identifier: the call succeeds and leaves the contact with zero identifiers, which makes it
-   * unreachable by {@link Contacts.list}'s `q` search and by {@link Contacts.upsert} matching
-   * going forward - confirm this is what you want before removing a contact's last identifier.
+   * throw. Removing a contact's *last* remaining identifier is different: the API refuses it,
+   * because a contact with zero identifiers would be unreachable by {@link Contacts.list}'s `q`
+   * search and by {@link Contacts.upsert} matching going forward. Add a replacement identifier
+   * with {@link Contacts.addIdentifier} first if you need to swap a contact's sole identifier.
    *
    * @param id The id of the contact to remove the identifier from.
    * @param identifierId The identifier's own id - {@link ContactIdentifier.id} from
@@ -336,8 +357,11 @@ export class Contacts {
    *   on transient failures - see {@link RequestOptions.idempotencyKey}.
    * @returns The contact with the identifier removed. See {@link ContactResponse}.
    * @throws {KazuniError} With `status: 404` if no contact with `id` exists for your
-   *   organization. Also thrown on any other non-2xx response (invalid API key, missing
-   *   permission, rate limiting, server error) or on a network failure/timeout.
+   *   organization.
+   * @throws {KazuniError} With `status: 422` if `identifierId` is the contact's only remaining
+   *   identifier - removing it is refused rather than leaving the contact with none. Also thrown
+   *   on any other non-2xx response (invalid API key, missing permission, rate limiting, server
+   *   error) or on a network failure/timeout.
    *
    * @example
    * ```ts
