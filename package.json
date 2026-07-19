@@ -35,12 +35,16 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "typecheck:examples": "tsc --noEmit -p examples/tsconfig.json",
-    "lint": "biome check ."
+    "lint": "biome check .",
+    "docs": "typedoc",
+    "test:integration": "vitest run test/integration"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.10.2",
     "tsup": "^8.3.5",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.12.0",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }

@@ -84,6 +84,18 @@ try {
 - `error.code` - a machine-readable error code, when the API provides one.
 - `error.requestId` - a request identifier for support, when the API returns one.
 
+## API reference
+
+Every exported symbol carries JSDoc, so your editor's hover/autocomplete is the fastest
+reference. For a browsable Markdown API reference generated from that same JSDoc, run:
+
+```bash
+pnpm docs
+```
+
+This writes the reference to `docs/api/` (gitignored - generate it locally rather than reading
+a possibly-stale copy).
+
 ## Status
 
 This SDK is alpha and tracks Kazuni API v1. The v1 surface currently covers sending transactional
