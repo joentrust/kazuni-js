@@ -1,12 +1,20 @@
 import { KazuniError } from "./errors";
 import type { RequestOptions } from "./types";
 
+/** Default value of {@link KazuniOptions.baseUrl} when none is given. */
 export const DEFAULT_BASE_URL = "https://api.kazuni.io";
+/** Default value of {@link KazuniOptions.timeout} in milliseconds, when none is given. */
 export const DEFAULT_TIMEOUT_MS = 30_000;
+/** Default value of {@link KazuniOptions.maxRetries} when none is given. */
 export const DEFAULT_MAX_RETRIES = 2;
 
 const BASE_BACKOFF_MS = 250;
 
+/**
+ * Resolved, internal request configuration for a {@link Kazuni} client - the fully-defaulted
+ * form of {@link KazuniOptions}. Not part of the public API; shared internally between
+ * {@link Kazuni} and its resource namespaces (e.g. {@link Send}).
+ */
 export interface RequestConfig {
   apiKey: string;
   baseUrl: string;
@@ -71,6 +79,11 @@ async function parseResponse<T>(response: Response): Promise<T> {
   return payload as T;
 }
 
+/**
+ * Internal transport used by every resource method to call the Kazuni API: builds the request,
+ * applies the retry/backoff policy, and maps the response to `T` or throws a
+ * {@link KazuniError}. Not part of the public API.
+ */
 export async function request<T>(
   config: RequestConfig,
   method: "GET" | "POST",
