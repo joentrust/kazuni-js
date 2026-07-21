@@ -152,3 +152,48 @@ describe("kazuni.send.email", () => {
     expect(headers["Idempotency-Key"]).toBe("my-idempotency-key");
   });
 });
+
+describe("kazuni.send.sms", () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("POSTs to /v1/messages/send with channel sms and returns the ack", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ id: "msg_1", channel: "sms", status: "queued" }, { status: 202 }),
+    );
+
+    const kazuni = new Kazuni({ apiKey: "cl_test_key", baseUrl: BASE_URL });
+    const result = await kazuni.send.sms({ from: "Kazuni", to: "+265991234567", text: "hi" });
+
+    expect(result).toEqual({ id: "msg_1", channel: "sms", status: "queued" });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`${BASE_URL}/v1/messages/send`);
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body as string)).toEqual({
+      channel: "sms",
+      from: "Kazuni",
+      to: "+265991234567",
+      text: "hi",
+    });
+  });
+
+  it("surfaces a warning on the ack when present", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(
+        { id: "msg_2", channel: "sms", status: "queued", warning: "sender ID unconfirmed" },
+        { status: 202 },
+      ),
+    );
+    const kazuni = new Kazuni({ apiKey: "cl_test_key", baseUrl: BASE_URL });
+    const result = await kazuni.send.sms({ from: "Kazuni", to: "+265991234567", text: "hi" });
+    expect(result.warning).toBe("sender ID unconfirmed");
+  });
+});

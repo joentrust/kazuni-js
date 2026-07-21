@@ -1,5 +1,11 @@
 import { type RequestConfig, request } from "../request";
-import type { RequestOptions, SendEmailParams, SendEmailResponse } from "../types";
+import type {
+  RequestOptions,
+  SendEmailParams,
+  SendEmailResponse,
+  SendMessageResponse,
+  SendSmsParams,
+} from "../types";
 
 /**
  * The `send` namespace on a {@link Kazuni} client, exposed as `kazuni.send`. Groups together
@@ -57,5 +63,45 @@ export class Send {
    */
   email(params: SendEmailParams, options?: RequestOptions): Promise<SendEmailResponse> {
     return request<SendEmailResponse>(this.#config, "POST", "/v1/emails/send", params, options);
+  }
+
+  /**
+   * Sends a single SMS.
+   *
+   * This makes a `POST /v1/messages/send` request with `channel: "sms"`. SMS must be enabled
+   * for your organization, and your API key must carry the `sendSms` permission - either
+   * missing and the call rejects with a {@link KazuniError} `status: 403` whose `code`
+   * distinguishes the two (`channel_not_enabled` vs `permission_required`).
+   *
+   * As with {@link Send.email}, a resolved promise means the send was **accepted**, not
+   * delivered - see {@link SendMessageResponse.status}. Because an SMS send is not idempotent,
+   * the SDK never auto-retries it unless you pass an `idempotencyKey`.
+   *
+   * @param params The SMS to send - sender ID, recipient, and text. See {@link SendSmsParams}.
+   * @param options Per-request options; pass `idempotencyKey` to make a retry safe. See
+   *   {@link RequestOptions.idempotencyKey}.
+   * @returns The queued send's id, channel, and status - plus an optional `warning` when the
+   *   send was accepted with a caveat (e.g. an unconfirmed sender ID).
+   * @throws {KazuniError} On any non-2xx response (channel not enabled, missing permission,
+   *   invalid recipient, unverified sender ID, rate limiting, server error) or a network failure.
+   *
+   * @example
+   * ```ts
+   * const result = await kazuni.send.sms({
+   *   from: "Kazuni",
+   *   to: "+265991234567",
+   *   text: "Your code is 4821.",
+   * });
+   * console.log(result.id, result.channel, result.status); // "msg_...", "sms", "queued"
+   * ```
+   */
+  sms(params: SendSmsParams, options?: RequestOptions): Promise<SendMessageResponse> {
+    return request<SendMessageResponse>(
+      this.#config,
+      "POST",
+      "/v1/messages/send",
+      { channel: "sms", ...params },
+      options,
+    );
   }
 }

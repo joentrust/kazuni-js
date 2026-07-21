@@ -1,6 +1,6 @@
 {
   "name": "kazuni",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Official JavaScript/TypeScript SDK for the Kazuni notifications API",
   "license": "MIT",
   "private": false,
@@ -15,7 +15,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=18"
   },
@@ -28,7 +30,13 @@
     "url": "https://github.com/kazunihq/kazuni-js/issues"
   },
   "homepage": "https://github.com/kazunihq/kazuni-js#readme",
-  "keywords": ["kazuni", "email", "sdk", "notifications", "api"],
+  "keywords": [
+    "kazuni",
+    "email",
+    "sdk",
+    "notifications",
+    "api"
+  ],
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
