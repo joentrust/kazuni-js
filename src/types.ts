@@ -147,26 +147,76 @@ export type MessageStatus =
   | "sending"
   | "sent"
   | "delivered"
+  | "undelivered"
   | "bounced"
   | "complained"
   | "rejected"
   | "failed";
 
 /**
+ * Parameters for sending a single SMS via {@link Send.sms}.
+ */
+export interface SendSmsParams {
+  /**
+   * The sender ID recipients see - an alphanumeric sender ID (e.g. `"Kazuni"`) or an E.164
+   * long code. Whether a given sender ID is permitted depends on the destination country's
+   * rules and your account's registration; an unverified sender ID may be rejected with a
+   * {@link KazuniError} `status: 403`.
+   */
+  from: string;
+
+  /** The recipient's phone number. Any format libphonenumber can parse is accepted and
+   * normalized to E.164; an unparseable number throws a {@link KazuniError} `status: 400`. */
+  to: string;
+
+  /** The message body. Kept plain text; long bodies are split into multiple billed segments. */
+  text: string;
+}
+
+/**
+ * The response returned by {@link Send.email} and {@link Send.sms}. Uniform across channels so
+ * the return shape does not change as channels are added - a resolved promise means the send was
+ * accepted, never that it was delivered.
+ */
+export interface SendMessageResponse {
+  /** The unique identifier assigned to this send, for use with {@link Messages.get} and support. */
+  id: string;
+
+  /** The channel the message was sent on. */
+  channel: Channel;
+
+  /** Always `"queued"` - the request was accepted, not delivered. */
+  status: "queued";
+
+  /**
+   * A non-fatal advisory, present only when the send was accepted with a caveat - for example,
+   * an SMS sent under a sender ID whose registration status for the destination country could
+   * not be confirmed. Absent on a clean send.
+   */
+  warning?: string;
+}
+
+/**
  * The response returned by {@link Messages.get} for a single message.
  */
 export interface GetMessageResponse {
-  /** The message's unique identifier, as returned by {@link Send.email} (`SendEmailResponse.id`). */
+  /** The message's unique identifier, as returned by a send (`SendMessageResponse.id`). */
   id: string;
 
-  /** The sender address the message was sent from. */
+  /** The channel this message was sent on. */
+  channel: Channel;
+
+  /** The sender address/ID the message was sent from. */
   from: string;
 
-  /** The recipient address the message was sent to. */
+  /** The recipient address/number the message was sent to. */
   to: string;
 
-  /** The email subject line. */
-  subject: string;
+  /** The email subject line, or `null` for channels without a subject (SMS). */
+  subject: string | null;
+
+  /** The number of billed segments, for SMS. `null` for channels where it does not apply. */
+  segments: number | null;
 
   /** The message's current delivery status. See {@link MessageStatus} for what each value means. */
   status: MessageStatus;

@@ -3,11 +3,9 @@ import type { GetMessageResponse } from "../types";
 
 /**
  * The `messages` namespace on a {@link Kazuni} client, exposed as `kazuni.messages`. Named for
- * where the API is heading, not just where it is today: {@link Messages.get} currently calls
- * `GET /v1/emails/:id`, the only message-status endpoint the API exposes right now. Once SMS and
- * WhatsApp land, the API will expose `GET /v1/messages/:id` with a `channel` field distinguishing
- * delivery channels, and this method will move to call that endpoint without changing its name
- * or shape from the caller's perspective.
+ * where the API is heading, not just where it is today: {@link Messages.get} calls
+ * `GET /v1/messages/:id`, which returns a `channel` field distinguishing delivery channels, so a
+ * single method reads the status of an email or an SMS without changing its name or shape.
  */
 export class Messages {
   #config: RequestConfig;
@@ -20,7 +18,7 @@ export class Messages {
   /**
    * Retrieves a message and its current delivery status.
    *
-   * This makes a `GET /v1/emails/:id` request today - see {@link Messages} for why the method is
+   * This makes a `GET /v1/messages/:id` request - see {@link Messages} for why the method is
    * named `get` rather than `getEmail`. Only messages belonging to your organization are
    * visible: an id that doesn't exist and an id that belongs to another organization both 404
    * identically, so a 404 here never confirms or denies that a given id exists elsewhere.
@@ -55,6 +53,6 @@ export class Messages {
    * ```
    */
   get(id: string): Promise<GetMessageResponse> {
-    return request<GetMessageResponse>(this.#config, "GET", `/v1/emails/${encodeURIComponent(id)}`);
+    return request<GetMessageResponse>(this.#config, "GET", `/v1/messages/${encodeURIComponent(id)}`);
   }
 }

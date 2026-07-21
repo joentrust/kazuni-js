@@ -55,7 +55,7 @@ describe("kazuni.messages.get", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe(`${BASE_URL}/v1/emails/email_123`);
+    expect(url).toBe(`${BASE_URL}/v1/messages/email_123`);
     expect(init.method).toBe("GET");
     const headers = init.headers as Record<string, string>;
     expect(headers.Authorization).toBe("Bearer cl_test_key");
@@ -80,7 +80,7 @@ describe("kazuni.messages.get", () => {
     await kazuni.messages.get("id/with slash");
 
     const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe(`${BASE_URL}/v1/emails/id%2Fwith%20slash`);
+    expect(url).toBe(`${BASE_URL}/v1/messages/id%2Fwith%20slash`);
   });
 
   it("maps a 404 response to a KazuniError", async () => {
