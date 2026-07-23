@@ -23,6 +23,8 @@ export type {
   RequestOptions,
   SendEmailParams,
   SendEmailResponse,
+  SendMessageResponse,
+  SendSmsParams,
   SetSubscriptionParams,
   SubscriptionSource,
   SubscriptionStatus,
