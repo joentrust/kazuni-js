@@ -1,0 +1,183 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release Type'
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - beta
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Dependencies
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          pnpm install --frozen-lockfile
+
+      # Runs before the version bump so a failure cannot leave a stray version commit behind.
+      - name: Test
+        run: |
+          pnpm lint
+          pnpm typecheck
+          pnpm typecheck:examples
+          pnpm test
+
+      - name: Setup Release Environment
+        id: setup
+        run: |
+          RELEASE_TYPE="${{ github.event.inputs.release_type }}"
+
+          RAW_VERSIONS=$(npm view kazuni versions --json 2>/dev/null || true)
+          ALL_VERSIONS=$(echo "$RAW_VERSIONS" | node -e "
+            try {
+              const d = JSON.parse(require('fs').readFileSync(0,'utf-8'));
+              console.log(JSON.stringify(Array.isArray(d) ? d : typeof d === 'string' ? [d] : []));
+            } catch { console.log('[]'); }
+          ")
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          echo "Current version from package.json: $CURRENT_VERSION"
+          echo "All published versions: $ALL_VERSIONS"
+
+          increment_version() {
+            local version=$1
+            local type=$2
+            local major minor patch
+            IFS='.' read -r major minor patch <<< "$version"
+            patch=${patch%%-*}
+            case $type in
+              major) echo "$((major + 1)).0.0" ;;
+              minor) echo "${major}.$((minor + 1)).0" ;;
+              patch) echo "${major}.${minor}.$((patch + 1))" ;;
+            esac
+          }
+
+          if [[ "$RELEASE_TYPE" == "beta" ]]; then
+            echo "IS_BETA=true" >> $GITHUB_OUTPUT
+            echo "TAG_NAME=beta" >> $GITHUB_OUTPUT
+
+            LATEST_BETA=$(echo "$ALL_VERSIONS" | node -e "
+              const versions = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
+              const betas = versions.filter(v => v.includes('-beta.'));
+              console.log(betas.length > 0 ? betas[betas.length - 1] : '');
+            ")
+
+            echo "Latest published beta: $LATEST_BETA"
+
+            if [[ -n "$LATEST_BETA" ]]; then
+              BASE_VERSION=$(echo $LATEST_BETA | cut -d'-' -f1)
+              BETA_NUM=$(echo $LATEST_BETA | cut -d'.' -f4)
+              NEXT_BETA=$((BETA_NUM + 1))
+              NEXT_VERSION="${BASE_VERSION}-beta.${NEXT_BETA}"
+            else
+              if [[ $CURRENT_VERSION == *"-beta."* ]]; then
+                BASE_VERSION=$(echo $CURRENT_VERSION | cut -d'-' -f1)
+              else
+                BASE_VERSION=$(increment_version "$CURRENT_VERSION" "patch")
+              fi
+              NEXT_VERSION="${BASE_VERSION}-beta.1"
+            fi
+          else
+            echo "IS_BETA=false" >> $GITHUB_OUTPUT
+            echo "TAG_NAME=latest" >> $GITHUB_OUTPUT
+
+            LATEST_VERSION=$(echo "$ALL_VERSIONS" | node -e "
+              const versions = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
+              const releases = versions.filter(v => !v.includes('-beta.'));
+              console.log(releases.length > 0 ? releases[releases.length - 1] : '');
+            ")
+
+            echo "Latest published version: $LATEST_VERSION"
+
+            if [[ -n "$LATEST_VERSION" ]]; then
+              NEXT_VERSION=$(increment_version "$LATEST_VERSION" "$RELEASE_TYPE")
+            else
+              NEXT_VERSION=$(increment_version "$CURRENT_VERSION" "$RELEASE_TYPE")
+            fi
+          fi
+
+          echo "Will publish version: $NEXT_VERSION"
+          echo "VERSION=$NEXT_VERSION" >> $GITHUB_OUTPUT
+
+          npm version $NEXT_VERSION --no-git-tag-version --allow-same-version
+          git add package.json
+          git commit -m "chore: bump kazuni to $NEXT_VERSION" || true
+
+      - name: Build
+        run: pnpm build
+
+      - name: Generate Changelog
+        if: success()
+        run: |
+          touch CHANGELOG.md
+          pnpm dlx conventional-changelog-cli -p angular -i CHANGELOG.md -s
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog for version ${{ steps.setup.outputs.VERSION }}" || true
+          git pull --rebase origin ${{ github.ref_name }}
+          git push origin HEAD:${{ github.ref_name }} || echo "branch is protected - skipping version/changelog push; the published artifact and release notes are unaffected"
+
+      - name: Setup npm
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm
+        run: |
+          if [[ "${{ steps.setup.outputs.IS_BETA }}" == "true" ]]; then
+            npm publish --tag beta --access public
+          else
+            npm publish --tag latest --access public
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag and Release
+        if: success()
+        run: |
+          VERSION=${{ steps.setup.outputs.VERSION }}
+
+          if [[ "${{ steps.setup.outputs.IS_BETA }}" == "true" ]]; then
+            gh release create v${VERSION} \
+              --prerelease \
+              --title "kazuni v${VERSION}" \
+              --notes "$(head -50 CHANGELOG.md)"
+          else
+            gh release create v${VERSION} \
+              --title "kazuni v${VERSION}" \
+              --notes "$(head -50 CHANGELOG.md)"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
