@@ -81,7 +81,7 @@ requiring real DNS changes.
 ### 4. Point the SDK at the local API
 
 ```ts
-import { Kazuni } from "kazuni";
+import { Kazuni } from "@kazuni/sdk";
 
 const kazuni = new Kazuni({
   apiKey: "cl_test_...", // the key you copied above

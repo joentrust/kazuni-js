@@ -4,7 +4,7 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "kazuni": ["../src/index.ts"]
+      "@kazuni/sdk": ["../src/index.ts"]
     }
   },
   "include": ["*.ts"]

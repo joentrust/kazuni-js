@@ -15,7 +15,7 @@ import type { KazuniConstructorArg, MeResponse } from "./types";
  *
  * @example
  * ```ts
- * import { Kazuni } from "kazuni";
+ * import { Kazuni } from "@kazuni/sdk";
  *
  * const kazuni = new Kazuni(process.env.KAZUNI_API_KEY!);
  *
