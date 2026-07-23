@@ -53,6 +53,10 @@ export class Messages {
    * ```
    */
   get(id: string): Promise<GetMessageResponse> {
-    return request<GetMessageResponse>(this.#config, "GET", `/v1/messages/${encodeURIComponent(id)}`);
+    return request<GetMessageResponse>(
+      this.#config,
+      "GET",
+      `/v1/messages/${encodeURIComponent(id)}`,
+    );
   }
 }
