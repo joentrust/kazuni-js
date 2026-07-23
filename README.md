@@ -1,4 +1,4 @@
-# kazuni
+# @kazuni/sdk
 
 Kazuni is a unified notifications platform for African businesses - email today, with SMS and
 WhatsApp planned. This is the official JavaScript/TypeScript SDK for the Kazuni API.
@@ -6,19 +6,19 @@ WhatsApp planned. This is the official JavaScript/TypeScript SDK for the Kazuni 
 ## Install
 
 ```bash
-pnpm add kazuni
+pnpm add @kazuni/sdk
 ```
 
 ```bash
-npm i kazuni
+npm i @kazuni/sdk
 # or
-yarn add kazuni
+yarn add @kazuni/sdk
 ```
 
 ## Quickstart
 
 ```ts
-import { Kazuni } from "kazuni";
+import { Kazuni } from "@kazuni/sdk";
 
 const kazuni = new Kazuni(process.env.KAZUNI_API_KEY!);
 
@@ -69,7 +69,7 @@ await kazuni.send.email(
 Request failures (authentication, validation, network, or API errors) throw a `KazuniError`:
 
 ```ts
-import { Kazuni, KazuniError } from "kazuni";
+import { Kazuni, KazuniError } from "@kazuni/sdk";
 
 try {
   await kazuni.send.email({ from: "hello@acme.example", to: "bad", subject: "Hi", html: "<p>Hi</p>" });

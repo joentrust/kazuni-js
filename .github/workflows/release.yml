@@ -58,7 +58,7 @@ jobs:
         run: |
           RELEASE_TYPE="${{ github.event.inputs.release_type }}"
 
-          RAW_VERSIONS=$(npm view kazuni versions --json 2>/dev/null || true)
+          RAW_VERSIONS=$(npm view @kazuni/sdk versions --json 2>/dev/null || true)
           ALL_VERSIONS=$(echo "$RAW_VERSIONS" | node -e "
             try {
               const d = JSON.parse(require('fs').readFileSync(0,'utf-8'));
@@ -132,7 +132,7 @@ jobs:
 
           npm version $NEXT_VERSION --no-git-tag-version --allow-same-version
           git add package.json
-          git commit -m "chore: bump kazuni to $NEXT_VERSION" || true
+          git commit -m "chore: bump @kazuni/sdk to $NEXT_VERSION" || true
 
       - name: Build
         run: pnpm build
@@ -172,11 +172,11 @@ jobs:
           if [[ "${{ steps.setup.outputs.IS_BETA }}" == "true" ]]; then
             gh release create v${VERSION} \
               --prerelease \
-              --title "kazuni v${VERSION}" \
+              --title "@kazuni/sdk v${VERSION}" \
               --notes "$(head -50 CHANGELOG.md)"
           else
             gh release create v${VERSION} \
-              --title "kazuni v${VERSION}" \
+              --title "@kazuni/sdk v${VERSION}" \
               --notes "$(head -50 CHANGELOG.md)"
           fi
         env:

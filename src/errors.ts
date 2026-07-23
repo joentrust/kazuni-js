@@ -36,7 +36,7 @@ export interface KazuniErrorOptions {
  *
  * @example
  * ```ts
- * import { Kazuni, KazuniError } from "kazuni";
+ * import { Kazuni, KazuniError } from "@kazuni/sdk";
  *
  * const kazuni = new Kazuni(process.env.KAZUNI_API_KEY!);
  *
