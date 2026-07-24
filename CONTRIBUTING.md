@@ -31,7 +31,7 @@ instead of hitting a live server. Real-network tests belong in `test/integration
 Everything above runs against a stubbed `fetch`, which never actually exercises a real API call.
 To verify the SDK against a real server, run it against the Kazuni platform's local dev stack.
 This assumes you have `kazunihq/platform` checked out separately (e.g. at
-`/Volumes/Work/code/kazuni/platform`) - it is a different repo from this SDK.
+`/Volumes/Work/code/fickson-limited/kazuni/platform`) - it is a different repo from this SDK.
 
 ### 1. Boot the platform dev stack
 
