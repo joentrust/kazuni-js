@@ -151,6 +151,24 @@ describe("kazuni.send.email", () => {
     const headers = init.headers as Record<string, string>;
     expect(headers["Idempotency-Key"]).toBe("my-idempotency-key");
   });
+
+  it("passes scheduledAt through in the request body", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ id: "email_123", status: "scheduled" }, { status: 202 }),
+    );
+
+    const kazuni = new Kazuni({ apiKey: "cl_test_key", baseUrl: BASE_URL });
+    await kazuni.send.email({
+      from: "hello@example.com",
+      to: "user@example.com",
+      subject: "Welcome",
+      html: "<p>hi</p>",
+      scheduledAt: "2026-08-01T09:00:00.000Z",
+    });
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).scheduledAt).toBe("2026-08-01T09:00:00.000Z");
+  });
 });
 
 describe("kazuni.send.sms", () => {

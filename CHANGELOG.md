@@ -1,3 +1,13 @@
+# 0.5.0 (2026-07-27)
+
+
+### Features
+
+* add optional `scheduledAt` to `send.email()` and `send.sms()` to schedule a future send
+* add `messages.cancel(id)` to cancel a scheduled message before it sends
+* add `"scheduled"` and `"canceled"` to `MessageStatus`, and `scheduledAt` to `GetMessageResponse`
+
+
 # 0.4.0 (2026-07-23)
 
 
