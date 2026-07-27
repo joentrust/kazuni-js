@@ -1,3 +1,4 @@
+# [0.5.0](https://github.com/kazunihq/kazuni-js/compare/v0.4.0...v0.5.0) (2026-07-27)
 # 0.5.0 (2026-07-27)
 
 
