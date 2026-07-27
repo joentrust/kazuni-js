@@ -15,7 +15,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=18"
   },
@@ -28,7 +30,13 @@
     "url": "https://github.com/kazunihq/kazuni-js/issues"
   },
   "homepage": "https://github.com/kazunihq/kazuni-js#readme",
-  "keywords": ["kazuni", "email", "sdk", "notifications", "api"],
+  "keywords": [
+    "kazuni",
+    "email",
+    "sdk",
+    "notifications",
+    "api"
+  ],
   "publishConfig": {
     "access": "public"
   },
