@@ -7,6 +7,7 @@ export { Send } from "./resources/send";
 export type {
   AddIdentifierParams,
   ApiKeyPermissions,
+  CancelMessageResponse,
   Channel,
   ContactIdentifier,
   ContactResponse,

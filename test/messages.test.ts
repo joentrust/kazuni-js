@@ -143,3 +143,33 @@ describe("kazuni.messages.get", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });
+
+describe("kazuni.messages.cancel", () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("posts to the cancel path and returns the parsed body", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ id: "msg_1", status: "canceled" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const kazuni = new Kazuni({ apiKey: "cl_test_key", baseUrl: "https://api.test.local" });
+    const result = await kazuni.messages.cancel("msg_1");
+
+    expect(result).toEqual({ id: "msg_1", status: "canceled" });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain("/msg_1/cancel");
+    expect(init.method).toBe("POST");
+  });
+});

@@ -105,6 +105,12 @@ export interface SendEmailParams {
    * recipients without HTML rendering see no fallback content.
    */
   text?: string;
+
+  /**
+   * Schedules the email to send at a future time instead of immediately, as an ISO 8601
+   * instant. Must be in the future and within 30 days.
+   */
+  scheduledAt?: string;
 }
 
 /**
@@ -141,6 +147,10 @@ export interface SendEmailResponse {
  * - `"rejected"` - rejected before delivery could be attempted.
  * - `"failed"` - the send attempt failed for a reason other than a bounce, complaint, or
  *   rejection.
+ * - `"scheduled"` - accepted for delivery at a future `scheduledAt` time; not yet handed to the
+ *   sending provider. Cancellable via {@link Messages.cancel} while in this state.
+ * - `"canceled"` - a `"scheduled"` message was canceled via {@link Messages.cancel} before it
+ *   fired. Terminal - it will never be sent.
  */
 export type MessageStatus =
   | "queued"
@@ -151,7 +161,9 @@ export type MessageStatus =
   | "bounced"
   | "complained"
   | "rejected"
-  | "failed";
+  | "failed"
+  | "scheduled"
+  | "canceled";
 
 /**
  * Parameters for sending a single SMS via {@link Send.sms}.
@@ -171,6 +183,12 @@ export interface SendSmsParams {
 
   /** The message body. Kept plain text; long bodies are split into multiple billed segments. */
   text: string;
+
+  /**
+   * Schedules the SMS to send at a future time instead of immediately, as an ISO 8601 instant.
+   * Must be in the future and within 30 days.
+   */
+  scheduledAt?: string;
 }
 
 /**
@@ -227,6 +245,14 @@ export interface GetMessageResponse {
    */
   error: string | null;
 
+  /**
+   * When a scheduled message is due to send, as an ISO 8601 timestamp. `null` for messages that
+   * were not scheduled - i.e. every message that did not set `scheduledAt` on send. Still
+   * populated after the message reaches `"scheduled"`'s eventual outcome or is `"canceled"`, so
+   * you can see what the schedule was.
+   */
+  scheduledAt: string | null;
+
   /** When the message was accepted for delivery, as an ISO 8601 timestamp. */
   queuedAt: string;
 
@@ -242,6 +268,24 @@ export interface GetMessageResponse {
    * `"bounced"` or `"failed"`).
    */
   deliveredAt: string | null;
+}
+
+/**
+ * The response returned by {@link Messages.cancel} after canceling a scheduled message.
+ *
+ * Deliberately narrower than {@link GetMessageResponse}: the cancel endpoint returns only these
+ * two fields, and reusing the wider type here would promise data the response does not actually
+ * carry. Call {@link Messages.get} afterward if you need the rest of the message's envelope.
+ */
+export interface CancelMessageResponse {
+  /** The canceled message's unique identifier, echoing the id passed to {@link Messages.cancel}. */
+  id: string;
+
+  /**
+   * The message's status after the cancel request. `"canceled"` on success - including when the
+   * message was already `"canceled"`, since canceling is idempotent. See {@link MessageStatus}.
+   */
+  status: MessageStatus;
 }
 
 /**
