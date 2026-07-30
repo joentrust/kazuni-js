@@ -43,7 +43,7 @@ request.
 ```ts
 const kazuni = new Kazuni({
   apiKey: process.env.KAZUNI_API_KEY!,
-  baseUrl: "https://api.kazuni.io", // override for self-hosting or tests
+  baseUrl: "https://api.usekazuni.com", // override for self-hosting or tests
   timeout: 30_000, // per-request timeout in milliseconds
   maxRetries: 2, // retries on 429 and 5xx responses
 });

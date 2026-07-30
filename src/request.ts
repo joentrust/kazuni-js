@@ -2,7 +2,7 @@ import { KazuniError } from "./errors";
 import type { RequestOptions } from "./types";
 
 /** Default value of {@link KazuniOptions.baseUrl} when none is given. */
-export const DEFAULT_BASE_URL = "https://api.kazuni.io";
+export const DEFAULT_BASE_URL = "https://api.usekazuni.com";
 /** Default value of {@link KazuniOptions.timeout} in milliseconds, when none is given. */
 export const DEFAULT_TIMEOUT_MS = 30_000;
 /** Default value of {@link KazuniOptions.maxRetries} when none is given. */
