@@ -17,7 +17,7 @@ export interface KazuniOptions {
   /**
    * The base URL of the Kazuni API.
    *
-   * Defaults to the production API (`https://api.kazuni.io`). Override this to point the SDK
+   * Defaults to the production API (`https://api.usekazuni.com`). Override this to point the SDK
    * at a local or self-hosted API server, e.g. `http://localhost:8000` when running the
    * Kazuni platform's dev stack. A trailing slash is stripped automatically.
    */
