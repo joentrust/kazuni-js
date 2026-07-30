@@ -131,6 +131,11 @@ jobs:
           echo "VERSION=$NEXT_VERSION" >> $GITHUB_OUTPUT
 
           npm version $NEXT_VERSION --no-git-tag-version --allow-same-version
+          # npm rewrites the whole file with its own JSON formatting, expanding
+          # arrays biome keeps on one line. Committing that turns main red on the
+          # next push, which is what happened after 0.5.0 and stayed unnoticed
+          # because nothing gates CI on main.
+          pnpm exec biome check --write package.json
           git add package.json
           git commit -m "chore: bump @kazuni/sdk to $NEXT_VERSION" || true
 
