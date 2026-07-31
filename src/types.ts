@@ -151,6 +151,9 @@ export interface SendEmailResponse {
  *   sending provider. Cancellable via {@link Messages.cancel} while in this state.
  * - `"canceled"` - a `"scheduled"` message was canceled via {@link Messages.cancel} before it
  *   fired. Terminal - it will never be sent.
+ * - `"suppressed"` - the recipient previously hard-bounced or complained, so Kazuni recorded
+ *   the message without sending it. Terminal. Remove the suppression in the dashboard to send
+ *   to this address again.
  */
 export type MessageStatus =
   | "queued"
@@ -163,7 +166,8 @@ export type MessageStatus =
   | "rejected"
   | "failed"
   | "scheduled"
-  | "canceled";
+  | "canceled"
+  | "suppressed";
 
 /**
  * Parameters for sending a single SMS via {@link Send.sms}.
