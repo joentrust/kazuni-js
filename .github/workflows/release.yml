@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
   issues: write
   pull-requests: write
 
@@ -153,10 +154,7 @@ jobs:
           git push origin HEAD:${{ github.ref_name }} || echo "branch is protected - skipping version/changelog push; the published artifact and release notes are unaffected"
 
       - name: Setup npm
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm install -g npm@^11.5.1
 
       - name: Publish to npm
         run: |
@@ -165,9 +163,6 @@ jobs:
           else
             npm publish --tag latest --access public
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Tag and Release
         if: success()
