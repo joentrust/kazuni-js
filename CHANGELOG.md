@@ -10,6 +10,12 @@
 ### Features
 
 * add replyTo to send.email() ([#10](https://github.com/joentrust/kazuni-sdk/issues/10)) ([328f3a2](https://github.com/joentrust/kazuni-sdk/commit/328f3a2511028d8527940da8b2778061d78d5c0a))
+# [0.6.0](https://github.com/joentrust/kazuni-sdk/compare/v0.5.2...v0.6.0) (2026-11-28)
+
+
+### Features
+
+* add replyTo to send.email() ([#10](https://github.com/joentrust/kazuni-sdk/issues/10)) ([328f3a2](https://github.com/joentrust/kazuni-sdk/commit/328f3a2511028d8527940da8b2778061d78d5c0a))
 ## [0.5.2](https://github.com/kazunihq/kazuni-js/compare/v0.5.1...v0.5.2) (2026-08-01)
 ## [0.5.1](https://github.com/kazunihq/kazuni-js/compare/v0.5.0...v0.5.1) (2026-07-30)
 
