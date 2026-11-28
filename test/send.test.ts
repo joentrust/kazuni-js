@@ -169,6 +169,27 @@ describe("kazuni.send.email", () => {
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(JSON.parse(init.body as string).scheduledAt).toBe("2026-08-01T09:00:00.000Z");
   });
+
+  it("passes replyTo through in the request body", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ id: "email_123", status: "queued" }, { status: 202 }),
+    );
+
+    const kazuni = new Kazuni({ apiKey: "cl_test_key", baseUrl: BASE_URL });
+    await kazuni.send.email({
+      from: "hello@example.com",
+      to: "user@example.com",
+      replyTo: ["support@example.com", "sales@example.com"],
+      subject: "Welcome",
+      html: "<p>hi</p>",
+    });
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).replyTo).toEqual([
+      "support@example.com",
+      "sales@example.com",
+    ]);
+  });
 });
 
 describe("kazuni.send.sms", () => {

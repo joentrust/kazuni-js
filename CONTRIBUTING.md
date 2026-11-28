@@ -1,12 +1,12 @@
-# Contributing to kazuni-js
+# Contributing to kazuni-sdk
 
 Thanks for your interest in improving the Kazuni SDK.
 
 ## Dev setup
 
 ```bash
-git clone https://github.com/kazunihq/kazuni-js.git
-cd kazuni-js
+git clone https://github.com/joentrust/kazuni-sdk.git
+cd kazuni-sdk
 pnpm install
 ```
 

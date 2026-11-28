@@ -94,6 +94,8 @@ export interface SendEmailParams {
   /** The recipient's email address. Only a single recipient is supported per request. */
   to: string;
 
+  replyTo?: string | string[];
+
   /** The email subject line. */
   subject: string;
 
@@ -233,6 +235,8 @@ export interface GetMessageResponse {
 
   /** The recipient address/number the message was sent to. */
   to: string;
+
+  replyTo: string[] | null;
 
   /** The email subject line, or `null` for channels without a subject (SMS). */
   subject: string | null;
